@@ -38,9 +38,9 @@ class GeneticAlgorithm:
         return real_word
 
     def is_fit(self, permutation, encrypted_word):
-        real_word = self.permutated_word(permutation, encrypted_word)
+        permutated_word = self.permutated_word(permutation, encrypted_word)
         for word in dict:
-            if word == real_word:
+            if word == permutated_word:
                 return True
 
         return False
