@@ -31,6 +31,16 @@ class GeneticAlgorithm:
 
         self.population = self.initialize_population()
 
+    def initialize_population(self):
+        population = []
+        for x in range(self.population_size):
+            permutation = {}
+            values = ''.join(sample(string.ascii_lowercase,len(string.ascii_lowercase)))
+            for i, char in enumerate(string.ascii_lowercase):
+                permutation[char] = values[i]
+            population.append(permutation)
+        return population
+
     def permutated_word(self, permutation, encrypted_word):
         real_word = ""
         for letter in encrypted_word:
@@ -53,16 +63,11 @@ class GeneticAlgorithm:
 
         return success_count
 
-    def initialize_population(self):
-        population = []
-        for x in range(self.population_size):
-            permutation = {}
-            values = ''.join(sample(string.ascii_lowercase,len(string.ascii_lowercase)))
-            for i, char in enumerate(string.ascii_lowercase):
-                permutation[char] = values[i]
-            population.append(permutation)
-        return population
+    def train(self):
+        print "Starting training"
 
+        print self.population[0]
+        print self.fitness(self.population[0])
 
 
 if __name__ == "__main__":
@@ -71,10 +76,8 @@ if __name__ == "__main__":
     enc2 = read_text_file("enc2.txt")
     dict = np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1')
 
-<<<<<<< HEAD
-    permutation = initialize_parameters()
+    population_size = 3
 
-    GA = GeneticAlgorithm(permutation)
-=======
-    GA = GeneticAlgorithm()
->>>>>>> ca05723f0a3ba63d7261e81e7e2fc455594c28c1
+    GA = GeneticAlgorithm(population_size, enc1, dict)
+
+    GA.train()
