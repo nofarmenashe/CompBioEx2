@@ -2,9 +2,6 @@ import string
 import numpy as np
 from random import shuffle, sample
 
-import numpy as np
-from numpy import random
-
 def read_text_file(text_file_name, remove_chars):
     with open(text_file_name, 'r') as file:
         file_arr = []
@@ -25,6 +22,17 @@ class GeneticAlgorithm:
 
         self.population = self.initialize_population()
 
+    def initialize_population(self):
+        population = []
+        for x in range(self.population_size):
+            permutation = {}
+            values = ''.join(sample(self.possible_chars, len(self.possible_chars)))
+            for i, char in enumerate(self.possible_chars):
+                permutation[char] = values[i]
+            population.append(permutation)
+        return population
+
+
     def permutated_word(self, permutation, encrypted_word):
         real_word = ""
         for letter in encrypted_word:
@@ -32,9 +40,9 @@ class GeneticAlgorithm:
         return real_word
 
     def is_fit(self, permutation, encrypted_word):
-        real_word = self.permutated_word(permutation, encrypted_word)
+        permutated_word = self.permutated_word(permutation, encrypted_word)
         for word in dict:
-            if word == real_word:
+            if word == permutated_word:
                 return True
 
         return False
@@ -47,16 +55,10 @@ class GeneticAlgorithm:
 
         return success_count
 
-    def initialize_population(self):
-        population = []
-        for x in range(self.population_size):
-            permutation = {}
-            values = ''.join(sample(self.possible_chars, len(self.possible_chars)))
-            for i, char in enumerate(self.possible_chars):
-                permutation[char] = values[i]
-            population.append(permutation)
-        return population
-
+    def train(self):
+        print "Starting training"
+        print self.population[0]
+        print self.fitness(self.population[0])
 
 
 if __name__ == "__main__":
@@ -70,5 +72,8 @@ if __name__ == "__main__":
     enc1_chars = string.ascii_lowercase
     GA1 = GeneticAlgorithm(population_size, enc1_chars, enc1, dict)
 
-    enc2_chars = string.ascii_lowercase + " .,;"
-    GA2 = GeneticAlgorithm(population_size, enc2_chars, enc2, dict)
+    GA1.train()
+
+    # enc2_chars = string.ascii_lowercase + " .,;"
+    # GA2 = GeneticAlgorithm(population_size, enc2_chars, enc2, dict)
+
