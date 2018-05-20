@@ -1,4 +1,6 @@
 import string
+import numpy as np
+from random import shuffle, sample
 
 import numpy as np
 from numpy import random
@@ -22,10 +24,12 @@ def initialize_parameters():
 
 class GeneticAlgorithm:
 
-    def __init__(self, enc, dict):
-        self.population = initialize_population()
+    def __init__(self, population_size, enc, dict):
+        self.population_size = population_size
         self.enc = enc
         self.dict = dict
+
+        self.population = self.initialize_population()
 
     def permutated_word(self, permutation, encrypted_word):
         real_word = ""
@@ -49,6 +53,17 @@ class GeneticAlgorithm:
 
         return success_count
 
+    def initialize_population(self):
+        population = []
+        for x in range(self.population_size):
+            permutation = {}
+            values = ''.join(sample(string.ascii_lowercase,len(string.ascii_lowercase)))
+            for i, char in enumerate(string.ascii_lowercase):
+                permutation[char] = values[i]
+            population.append(permutation)
+        return population
+
+
 
 if __name__ == "__main__":
 
@@ -56,6 +71,10 @@ if __name__ == "__main__":
     enc2 = read_text_file("enc2.txt")
     dict = np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1')
 
+<<<<<<< HEAD
     permutation = initialize_parameters()
 
     GA = GeneticAlgorithm(permutation)
+=======
+    GA = GeneticAlgorithm()
+>>>>>>> ca05723f0a3ba63d7261e81e7e2fc455594c28c1
