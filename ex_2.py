@@ -27,6 +27,7 @@ class GeneticAlgorithm:
 
 
 
+
 if __name__ == "__main__":
 
     enc1 = read_text_file("enc1.txt")
