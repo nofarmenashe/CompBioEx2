@@ -2,6 +2,7 @@ import string
 import random
 import numpy as np
 from random import shuffle, sample
+import operator
 
 def read_text_file(text_file_name, remove_chars):
     with open(text_file_name, 'r') as file:
@@ -19,12 +20,14 @@ def calculate_probability(p):
 
 class GeneticAlgorithm:
 
-    def __init__(self, population_size, possible_chars, enc, dict, mutation_rate):
+    def __init__(self, population_size, replication_rate, mutation_rate, possible_chars, enc, dict):
         self.population_size = population_size
+        self.replication_rate = replication_rate
+        self.mutation_rate = mutation_rate
+
         self.possible_chars = possible_chars
         self.enc = enc
         self.dict = dict
-        self.mutation_rate = mutation_rate
 
         self.population = self.initialize_population()
 
@@ -61,23 +64,48 @@ class GeneticAlgorithm:
 
         return success_count
 
-    def find_key_by_letter_in_dict(self, letter):
-        return [key for key, value in self.dict.iteritems() if value == letter][0]
+    def find_key_by_letter_in_dict(self, permutation, search_letter):
+        for key in permutation.keys():
+            if permutation[key] == search_letter:
+                return key
 
     def mutate(self, permutation):
-        for letter in permutation:
+        print permutation
+        for letter in permutation.keys():
             if calculate_probability(self.mutation_rate):
-                random_letter = random.choice(string.ascii_letters)
+                random_letter = random.choice(string.ascii_lowercase)
 
-                key_of_random_letter = self.find_key_by_letter_in_dict(random_letter)
+                key_of_random_letter = self.find_key_by_letter_in_dict(permutation, random_letter)
                 permutation[key_of_random_letter] = permutation[letter]
 
                 permutation[letter] = random_letter
 
+        print permutation
+        return permutation
+
+    def replication(self, sorted_permutations):
+        print sorted_permutations
+        top_permutations = sorted_permutations[:int(self.replication_rate * population_size)]
+        # print [self.population[index] for index in top_permutations]
+        return top_permutations
+
+    def calculate_population_fitness(self):
+        fitness_dict = {}
+        for i, permutation in enumerate(self.population):
+            fitness_dict[i] = self.fitness(permutation)
+        sorted_permutations = [k for k in sorted(fitness_dict, key=fitness_dict.get, reverse=True)]
+        # print fitness_dict
+        return sorted_permutations
+
     def train(self):
         print "Starting training"
+        new_population = []
 
-        print self.fitness(self.population[0])
+        sorted_permutations = self.calculate_population_fitness()
+
+        new_population.extend(self.replication(sorted_permutations))
+
+        self.mutate(self.population[0])
 
 
 if __name__ == "__main__":
@@ -87,10 +115,11 @@ if __name__ == "__main__":
     dict = np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1')
 
     population_size = 50
+    replication_rate = 0.05
     enc1_chars = string.ascii_lowercase
-    mutation_rate = 0.005
+    mutation_rate = 0.05
 
-    GA1 = GeneticAlgorithm(population_size, enc1_chars, enc1, dict, mutation_rate)
+    GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
 
     GA1.train()
 
