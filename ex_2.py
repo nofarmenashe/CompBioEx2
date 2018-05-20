@@ -1,4 +1,5 @@
 import string
+import random
 import numpy as np
 from random import shuffle, sample
 
@@ -12,13 +13,18 @@ def read_text_file(text_file_name, remove_chars):
         return np.array(file_arr)
 
 
+def calculate_probability(p):
+    return random.random() >= 1-p
+
+
 class GeneticAlgorithm:
 
-    def __init__(self, population_size, possible_chars, enc, dict):
+    def __init__(self, population_size, possible_chars, enc, dict, mutation_rate):
         self.population_size = population_size
         self.possible_chars = possible_chars
         self.enc = enc
         self.dict = dict
+        self.mutation_rate = mutation_rate
 
         self.population = self.initialize_population()
 
@@ -55,22 +61,36 @@ class GeneticAlgorithm:
 
         return success_count
 
+    def find_key_by_letter_in_dict(self, letter):
+        return [key for key, value in self.dict.iteritems() if value == letter][0]
+
+    def mutate(self, permutation):
+        for letter in permutation:
+            if calculate_probability(self.mutation_rate):
+                random_letter = random.choice(string.ascii_letters)
+
+                key_of_random_letter = self.find_key_by_letter_in_dict(random_letter)
+                permutation[key_of_random_letter] = permutation[letter]
+
+                permutation[letter] = random_letter
+
     def train(self):
         print "Starting training"
-        print self.population[0]
+
         print self.fitness(self.population[0])
 
 
 if __name__ == "__main__":
 
     enc1 = read_text_file("enc1.txt", ".,;")
-    print enc1
     enc2 = read_text_file("enc2.txt", "")
     dict = np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1')
 
     population_size = 50
     enc1_chars = string.ascii_lowercase
-    GA1 = GeneticAlgorithm(population_size, enc1_chars, enc1, dict)
+    mutation_rate = 0.005
+
+    GA1 = GeneticAlgorithm(population_size, enc1_chars, enc1, dict, mutation_rate)
 
     GA1.train()
 
