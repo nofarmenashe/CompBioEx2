@@ -1,6 +1,6 @@
 import string
 import numpy as np
-from random import shuffle
+from random import shuffle, sample
 
 
 def read_text_file(text_file_name):
@@ -13,15 +13,19 @@ def read_text_file(text_file_name):
 
 
 class GeneticAlgorithm:
-    def initialize_parameters(self):
-        permutation = {}
-        values = shuffle(string.ascii_lowercase)
-        for i, char in enumerate(string.ascii_lowercase):
-            permutation[char] = values[i]
-        return permutation
+    def initialize_population(self):
+        population_size = 3
+        population = []
+        for x in range(population_size):
+            permutation = {}
+            values = ''.join(sample(string.ascii_lowercase,len(string.ascii_lowercase)))
+            for i, char in enumerate(string.ascii_lowercase):
+                permutation[char] = values[i]
+            population.append(permutation)
+        return population
 
     def __init__(self):
-        self.permutation = self.initialize_parameters()
+        self.permutation = self.initialize_population()
 
 
 
@@ -30,7 +34,5 @@ if __name__ == "__main__":
     enc1 = read_text_file("enc1.txt")
     enc2 = read_text_file("enc2.txt")
     dict = np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1')
-
-    permutation = initialize_parameters()
 
     GA = GeneticAlgorithm()
