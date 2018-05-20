@@ -35,4 +35,6 @@ if __name__ == "__main__":
     enc2 = read_text_file("enc2.txt")
     dict = np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1')
 
-    GA = GeneticAlgorithm()
+    population_size = 50
+
+    GA1 = GeneticAlgorithm(population_size, enc1, dict)
