@@ -1,6 +1,7 @@
 import string
 import numpy as np
 from random import shuffle, sample
+import operator
 
 def read_text_file(text_file_name, remove_chars):
     with open(text_file_name, 'r') as file:
@@ -14,8 +15,9 @@ def read_text_file(text_file_name, remove_chars):
 
 class GeneticAlgorithm:
 
-    def __init__(self, population_size, possible_chars, enc, dict):
+    def __init__(self, population_size, replication_rate, possible_chars, enc, dict):
         self.population_size = population_size
+        self.replication_rate = replication_rate
         self.possible_chars = possible_chars
         self.enc = enc
         self.dict = dict
@@ -55,10 +57,26 @@ class GeneticAlgorithm:
 
         return success_count
 
+    def replication(self, sorted_permutations):
+        print sorted_permutations
+        top_permutaions = sorted_permutations[:int(self.replication_rate * population_size)]
+        print [self.population[index] for index in top_permutaions]
+
+    def calculate_population_fitness(self):
+        fitness_dict = {}
+        for i, permutation in enumerate(self.population):
+            fitness_dict[i] = self.fitness(permutation)
+        sorted_permutations = [k for k in sorted(fitness_dict, key=fitness_dict.get, reverse=True)]
+        # print fitness_dict
+        return sorted_permutations
+
     def train(self):
         print "Starting training"
-        print self.population[0]
-        print self.fitness(self.population[0])
+        new_population = []
+
+        sorted_permutations = self.calculate_population_fitness()
+
+        new_population.extend[self.replication(sorted_permutations)]
 
 
 if __name__ == "__main__":
@@ -69,8 +87,9 @@ if __name__ == "__main__":
     dict = np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1')
 
     population_size = 50
+    replication_rate = 0.05
     enc1_chars = string.ascii_lowercase
-    GA1 = GeneticAlgorithm(population_size, enc1_chars, enc1, dict)
+    GA1 = GeneticAlgorithm(population_size, replication_rate, enc1_chars, enc1, dict)
 
     GA1.train()
 
