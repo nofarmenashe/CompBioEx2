@@ -1,6 +1,7 @@
 import string
+
 import numpy as np
-from random import shuffle
+from numpy import random
 
 def read_text_file(text_file_name):
     with open(text_file_name, 'r') as file:
@@ -11,18 +12,42 @@ def read_text_file(text_file_name):
         return np.array(file_arr)
 
 
+def initialize_parameters():
+    permutation = {}
+    values = random.shuffle(string.ascii_lowercase)
+    for char in string.ascii_lowercase:
+        permutation[char] = char
+    return permutation
+
+
 class GeneticAlgorithm:
-    def initialize_parameters(self):
-        permutation = {}
-        values = shuffle(string.ascii_lowercase)
-        for i, char in enumerate(string.ascii_lowercase):
-            permutation[char] = values[i]
-        return permutation
 
-    def __init__(self):
-        self.permutation = self.initialize_parameters()
+    def __init__(self, enc, dict):
+        self.population = initialize_population()
+        self.enc = enc
+        self.dict = dict
 
+    def permutated_word(self, permutation, encrypted_word):
+        real_word = ""
+        for letter in encrypted_word:
+            real_word += permutation[letter]
+        return real_word
 
+    def is_fit(self, permutation, encrypted_word):
+        real_word = self.permutated_word(permutation, encrypted_word)
+        for word in dict:
+            if word == real_word:
+                return True
+
+        return False
+
+    def fitness(self, permutation):
+        success_count = 0
+        for encrypted_word in self.enc:
+            if self.is_fit(permutation, encrypted_word):
+                success_count += 1
+
+        return success_count
 
 
 if __name__ == "__main__":
@@ -33,4 +58,4 @@ if __name__ == "__main__":
 
     permutation = initialize_parameters()
 
-    GA = GeneticAlgorithm()
+    GA = GeneticAlgorithm(permutation)
