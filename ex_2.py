@@ -60,23 +60,78 @@ class GeneticAlgorithm:
     def replication(self, sorted_permutations):
         print sorted_permutations
         top_permutaions = sorted_permutations[:int(self.replication_rate * population_size)]
-        print [self.population[index] for index in top_permutaions]
+        return [self.population[index] for index in top_permutaions]
 
-    def calculate_population_fitness(self):
+    def create_permutation_array_by_fitness(self, fitness_dictionary):
+        permutations_array = []
+        for per, fitness in fitness_dictionary.items():
+            permutations_array.extend(np.full(fitness, per))
+        return permutations_array
+
+    def chooseParents(self, fitness_array):
+        first, second = np.random.randint(0, len(fitness_array), 2)
+        return fitness_array[first], fitness_array[second]
+
+    def create_child(self, pf1, pf2):
+        probability_of_p1 = float(pf1["fitness"]) / (pf1["fitness"] + pf2["fitness"])
+        print pf1["fitness"],  pf2["fitness"], " p = ", probability_of_p1
+        new_permutation = {}
+        chars_without_permutation = pf1["permutation"].keys()
+        chars_left = pf1["permutation"].keys()
+        # print pf1["permutation"]
+        # print pf2["permutation"]
+        # print zip(pf1["permutation"], pf2["permutation"])
+        for c, per1, per2 in zip(pf1["permutation"].keys(), pf2["permutation"].values(), pf1["permutation"].values()):
+            if np.random.random() < probability_of_p1:  # choose from first parent
+                print c, per1, per2, "1"
+                if per1 in chars_left:
+                    new_permutation[c] = per1
+                    chars_left.remove(per1)
+                    chars_without_permutation.remove(c)
+            else:  # choose from second parent
+                print c, per1, per2, "2"
+                if per2 in chars_left:
+                    new_permutation[c] = per2
+                    chars_left.remove(per2)
+                    chars_without_permutation.remove(c)
+
+        for i, c in enumerate(chars_without_permutation):
+            print c, "?"
+            new_permutation[c] = chars_left[i]
+
+        print new_permutation
+        return new_permutation
+
+    def crossover(self, fitness_dictionary):
+        fitness_array = self.create_permutation_array_by_fitness(fitness_dictionary)
+        new_gen_crossover = []
+        for i in range(int((1 - self.replication_rate) * population_size)):
+            parent1_index, parent2_index = self.chooseParents(fitness_array)
+            parent_fitness_1 = {"permutation": self.population[parent1_index], "fitness": fitness_dictionary[parent1_index]}
+            parent_fitness_2 = {"permutation": self.population[parent2_index], "fitness": fitness_dictionary[parent2_index]}
+            new_gen_crossover.append(self.create_child(parent_fitness_1, parent_fitness_2))
+        return new_gen_crossover
+
+    def calculate_population_fitness(self, fitness_dict):
+        sorted_permutations = [k for k in sorted(fitness_dict, key=fitness_dict.get, reverse=True)]
+        self.crossover(fitness_dict)
+        # print fitness_dict
+        return sorted_permutations
+
+    def get_fitness_dictionary(self):
         fitness_dict = {}
         for i, permutation in enumerate(self.population):
             fitness_dict[i] = self.fitness(permutation)
-        sorted_permutations = [k for k in sorted(fitness_dict, key=fitness_dict.get, reverse=True)]
-        # print fitness_dict
-        return sorted_permutations
 
     def train(self):
         print "Starting training"
         new_population = []
 
-        sorted_permutations = self.calculate_population_fitness()
+        fitness_dict = self.get_fitness_dictionary()
+        sorted_permutations = self.calculate_population_fitness(fitness_dict)
 
-        new_population.extend[self.replication(sorted_permutations)]
+        new_population.extend(self.replication(sorted_permutations))
+        new_population.extend(self.crossover(fitness_dict))
 
 
 if __name__ == "__main__":
