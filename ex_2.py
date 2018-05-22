@@ -72,6 +72,7 @@ class GeneticAlgorithm:
 
     def is_fit(self, permutation, encrypted_word):
         permutated_word = self.permutated_word(permutation, encrypted_word)
+
         for word in dict:
             if word == permutated_word:
                 return True
@@ -172,6 +173,7 @@ class GeneticAlgorithm:
 
         expected_result = len(self.enc)
         best_fitness = 0
+        iteration_number = 0
 
         while best_fitness < expected_result:
             new_population = []
@@ -191,10 +193,12 @@ class GeneticAlgorithm:
             # new_fitness = [self.fitness(per) for per in new_population]
             new_fitness = fitness_dict.values()
 
+            print "*** Iteration Number: ", iteration_number
             print "best", np.max(new_fitness)
             print "avg", np.average(new_fitness)
 
             self.population = new_population
+            iteration_number += 1
 
 
 if __name__ == "__main__":
@@ -206,7 +210,7 @@ if __name__ == "__main__":
     population_size = 100
     replication_rate = 0.05
     enc1_chars = string.ascii_lowercase
-    mutation_rate = 0.02
+    mutation_rate = 0.1
 
     GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
 
