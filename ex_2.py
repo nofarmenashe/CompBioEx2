@@ -214,6 +214,7 @@ if __name__ == "__main__":
 
     GA1.train()
 
+
     # enc2_chars = string.ascii_lowercase + " .,;"
     # GA2 = GeneticAlgorithm(population_size, enc2_chars, enc2, dict)
 
