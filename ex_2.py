@@ -89,6 +89,9 @@ class GeneticAlgorithm:
         # print [self.population[index] for index in top_permutations]
         return top_permutations
 
+    def crossover(self):
+        self.createArray
+
     def calculate_population_fitness(self):
         fitness_dict = {}
         for i, permutation in enumerate(self.population):
@@ -122,6 +125,7 @@ if __name__ == "__main__":
     GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
 
     GA1.train()
+
 
     # enc2_chars = string.ascii_lowercase + " .,;"
     # GA2 = GeneticAlgorithm(population_size, enc2_chars, enc2, dict)
