@@ -65,7 +65,10 @@ class GeneticAlgorithm:
     def permutated_word(self, permutation, encrypted_word):
         real_word = ""
         for letter in encrypted_word:
-            real_word += permutation[letter]
+            if letter in self.possible_chars:
+                real_word += permutation[letter]
+            else:
+                real_word += letter
         return real_word
 
     def is_fit(self, permutation, encrypted_word):
@@ -165,8 +168,6 @@ class GeneticAlgorithm:
 
     def train(self):
         print "Starting training"
-        # new_fitness = [self.fitness(permutation) for permutation in self.population]
-        # new_fitness = [0]
 
         expected_result = len(self.enc)
         best_fitness = 0
@@ -197,6 +198,19 @@ class GeneticAlgorithm:
 
             self.population = new_population
             iteration_number += 1
+        return best_permutation
+
+
+def write_result_to_files(enc_text, permutation, perm_filename, plain_filename):
+    permutated_text = GA1.permutated_word(permutation, enc_text)
+    plain_file = open(plain_filename, "w")
+    plain_file.write(permutated_text)
+    plain_file.close()
+    print permutation
+    perm_file = open(perm_filename, "w")
+    for per in np.sort(permutation.keys()):
+        perm_file.write(per + " " + permutation[per] + "\n")
+    perm_file.close()
 
 
 if __name__ == "__main__":
@@ -212,7 +226,12 @@ if __name__ == "__main__":
 
     GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
 
-    GA1.train()
+    chosen_premutation = GA1.train()
+
+    with open("enc1.txt", 'r') as file:
+        enc1_text = file.read()
+
+    write_result_to_files(enc1_text, chosen_premutation, "perm1.txt", "plain1.txt")
 
 
     # enc2_chars = string.ascii_lowercase + " .,;"
