@@ -14,6 +14,15 @@ def read_text_file(text_file_name, remove_chars):
         return np.array(file_arr)
 
 
+def read_text_file_by_lines(text_file_name):
+    with open(text_file_name, 'r') as file:
+        file_arr = []
+        for line in file.read().splitlines():
+            if line.strip():
+                file_arr.append(line)
+        return np.array(file_arr)
+
+
 def calculate_probability(p):
     return random.random() >= 1-p
 
@@ -45,24 +54,22 @@ class GeneticAlgorithm:
             if letters_count[char] == max_count:
                 return char
 
-
     def initialize_population(self):
         population = []
-        common_letter = self.most_common_letter()
+        # common_letter = self.most_common_letter()
         for x in range(self.population_size):
             permutation = {}
             values = ''.join(sample(self.possible_chars, len(self.possible_chars)))
             for i, char in enumerate(self.possible_chars):
                 permutation[char] = values[i]
 
-            common_letter_key = self.find_key_by_letter_in_dict(permutation, common_letter)
-            permutation[common_letter_key] = permutation['e']
-
-            permutation['e'] = common_letter
+            # common_letter_key = self.find_key_by_letter_in_dict(permutation, common_letter)
+            # permutation['e'] = permutation[common_letter_key]
+            #
+            # permutation[common_letter] = 'e'
             population.append(permutation)
 
         return population
-
 
     def permutated_word(self, permutation, encrypted_word):
         real_word = ""
@@ -72,16 +79,18 @@ class GeneticAlgorithm:
 
     def is_fit(self, permutation, encrypted_word):
         permutated_word = self.permutated_word(permutation, encrypted_word)
-
-        for word in dict:
-            if word == permutated_word:
+        if permutated_word in dict:
                 return True
-
         return False
 
-    def fitness(self, permutation):
+    def fitness(self, permutation, *positional_parameters, **keyword_parameters):
+
+        words = self.enc
+        if 'words' in keyword_parameters:
+            words = keyword_parameters['words']
+
         success_count = 0
-        for encrypted_word in self.enc:
+        for encrypted_word in words:
             if self.is_fit(permutation, encrypted_word):
                 success_count += 1
 
@@ -92,34 +101,38 @@ class GeneticAlgorithm:
             if permutation[key] == search_letter:
                 return key
 
-    def mutate(self, permutation):
+    def mutate(self, population):
         # print permutation
-        for letter in permutation.keys():
+        for permutation in population:
             if calculate_probability(self.mutation_rate):
-                random_letter = random.choice(string.ascii_lowercase)
+                random_letter1, random_letter2 = np.random.choice(permutation.keys(), size=2)
 
-                key_of_random_letter = self.find_key_by_letter_in_dict(permutation, random_letter)
-                permutation[key_of_random_letter] = permutation[letter]
-
-                permutation[letter] = random_letter
+                permutation_letter1 = permutation[random_letter1]
+                permutation[random_letter1] = permutation[random_letter2]
+                permutation[random_letter2] = permutation_letter1
 
         # print permutation
-        return permutation
+        return population
 
     def replication(self, sorted_permutations):
         # print sorted_permutations
         top_permutaions = sorted_permutations[:int(self.replication_rate * population_size)]
         return [self.population[index] for index in top_permutaions]
 
-    def create_permutation_array_by_fitness(self, fitness_dictionary):
-        permutations_array = []
-        for per, fitness in fitness_dictionary.items():
-            permutations_array.extend(np.full(fitness, per))
-        return permutations_array
+    # def create_permutation_array_by_fitness(self, fitness_dictionary):
+    #     permutations_array = []
+    #     sum_fitnesses = np.sum(fitness_dictionary.values())
+    #     for per, fitness in fitness_dictionary.items():
+    #         print fitness, sum_fitnesses
+    #         permutations_array.extend(np.full(int(float(fitness) / sum_fitnesses), per))
+    #     print permutations_array
+    #     return permutations_array
 
-    def chooseParents(self, fitness_array):
-        first, second = np.random.randint(0, len(fitness_array), 2)
-        return fitness_array[first], fitness_array[second]
+    def chooseParents(self, fitness_dict):
+        sum_of_fitnesses = np.sum(fitness_dict.values())
+        fitness_probability = [float(f) / sum_of_fitnesses for f in fitness_dict.values()]
+        first, second = np.random.choice(fitness_dict.keys(), size=2, p=fitness_probability)
+        return first, second
 
     def create_child(self, pf1, pf2):
         probability_of_p1 = float(pf1["fitness"]) / (pf1["fitness"] + pf2["fitness"])
@@ -145,10 +158,9 @@ class GeneticAlgorithm:
         return new_permutation
 
     def crossover(self, fitness_dictionary):
-        fitness_array = self.create_permutation_array_by_fitness(fitness_dictionary)
         new_gen_crossover = []
         for i in range(int((1 - self.replication_rate) * population_size)):
-            parent1_index, parent2_index = self.chooseParents(fitness_array)
+            parent1_index, parent2_index = self.chooseParents(fitness_dictionary)
             parent_fitness_1 = {"permutation": self.population[parent1_index], "fitness": fitness_dictionary[parent1_index]}
             parent_fitness_2 = {"permutation": self.population[parent2_index], "fitness": fitness_dictionary[parent2_index]}
             new_gen_crossover.append(self.create_child(parent_fitness_1, parent_fitness_2))
@@ -156,8 +168,6 @@ class GeneticAlgorithm:
 
     def calculate_population_fitness(self, fitness_dict):
         sorted_permutations = [k for k in sorted(fitness_dict, key=fitness_dict.get, reverse=True)]
-        # self.crossover(fitness_dict)
-        # print fitness_dict
         return sorted_permutations
 
     def get_fitness_dictionary(self):
@@ -166,16 +176,22 @@ class GeneticAlgorithm:
             fitness_dict[i] = self.fitness(permutation)
         return fitness_dict
 
+    def get_max_fitness(self):
+        return len(self.enc)
+
+    def is_best(self, best_permutation):
+        return self.fitness(best_permutation) == self.get_max_fitness()
+
     def train(self):
         print "Starting training"
-        # new_fitness = [self.fitness(permutation) for permutation in self.population]
-        # new_fitness = [0]
 
-        expected_result = len(self.enc)
+        expected_result = self.get_max_fitness()
         best_fitness = 0
-        iteration_number = 0
+        iteration_number = 1
+        best_permutation = self.population[0]
 
-        while best_fitness < expected_result:
+        # while best_fitness < expected_result:
+        while not self.is_best(best_permutation):
             new_population = []
 
             fitness_dict = self.get_fitness_dictionary()
@@ -184,10 +200,11 @@ class GeneticAlgorithm:
             best_permutation = self.population[sorted_permutations[0]]
 
             new_population.extend(self.replication(sorted_permutations))
+
             new_population.extend(self.crossover(fitness_dict))
 
             new_population.remove(best_permutation)
-            new_population = [self.mutate(permutation) for permutation in new_population]
+            new_population = self.mutate(new_population)
             new_population.append(best_permutation)
 
             # new_fitness = [self.fitness(per) for per in new_population]
@@ -201,22 +218,56 @@ class GeneticAlgorithm:
             iteration_number += 1
 
 
+class GeneticAlgorithm2(GeneticAlgorithm):
+
+    def __init__(self, population_size, replication_rate, mutation_rate, possible_chars, enc, dict):
+        GeneticAlgorithm.__init__(self, population_size, replication_rate, mutation_rate, possible_chars, enc, dict)
+
+    def fitness(self, permutation):
+        fitness = 0
+        for sentence in self.enc:
+            permutated_sentence = self.permutated_word(permutation, sentence)
+            permutated_sentence = permutated_sentence.translate(None, ".,;")
+            words = permutated_sentence.split(' ')
+            fitness += GeneticAlgorithm.fitness(self, permutation, words=words)
+
+        return fitness
+
+    def is_best(self, best_permutation):
+        words = []
+        for sentence in self.enc:
+            permutated_sentence = self.permutated_word(best_permutation, sentence)
+            permutated_sentence = permutated_sentence.translate(None, ".,;")
+            words = permutated_sentence.split(' ')
+
+            for word in words:
+                if word not in dict:
+                    return False
+
+        return True
+
+
 if __name__ == "__main__":
 
     enc1 = read_text_file("enc1.txt", ".,;")
-    enc2 = read_text_file("enc2.txt", "")
-    dict = np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1')
+    enc2 = read_text_file_by_lines("enc2.txt")
 
-    population_size = 100
-    replication_rate = 0.05
+    dict = set(np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1'))
+
+    population_size = 500
+    replication_rate = 0.1
     enc1_chars = string.ascii_lowercase
-    mutation_rate = 0.1
+    mutation_rate = 0.25
 
-    GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
+    # GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
+    # GA1.train()
 
-    GA1.train()
 
+    population_size_2 = 500
+    replication_rate_2 = 0.1
+    mutation_rate_2 = 0.25
+    enc2_chars = string.ascii_lowercase + " .,;"
 
-    # enc2_chars = string.ascii_lowercase + " .,;"
-    # GA2 = GeneticAlgorithm(population_size, enc2_chars, enc2, dict)
+    GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict)
 
+    GA2.train()
