@@ -223,14 +223,14 @@ class GeneticAlgorithm:
             self.population = new_population
             iteration_number += 1
 
-            if iteration_number % 50 == 0:
+            if iteration_number % 20 == 0:
                 self.print_text(best_permutation)
 
         return best_permutation
 
 
-def write_result_to_files(enc_text, permutation, perm_filename, plain_filename):
-    permutated_text = GA1.permutated_word(permutation, enc_text)
+def write_result_to_files(GA, enc_text, permutation, perm_filename, plain_filename):
+    permutated_text = GA.permutated_word(permutation, enc_text)
     plain_file = open(plain_filename, "w")
     plain_file.write(permutated_text)
     plain_file.close()
@@ -249,10 +249,20 @@ class GeneticAlgorithm2(GeneticAlgorithm):
     def fitness(self, permutation):
         fitness = 0
         for sentence in self.enc:
+            # we do permutated_word TWICE !!!
+
             permutated_sentence = self.permutated_word(permutation, sentence)
+            # specials = '.,;' #etc
+            # trans = string.maketrans(specials, ' '*len(specials))
+            # permutated_sentence = permutated_sentence.translate(trans)
             permutated_sentence = permutated_sentence.translate(None, ".,;")
             words = permutated_sentence.split(' ')
-            fitness += GeneticAlgorithm.fitness(self, permutation, words=words)
+
+            for word in words:
+                if word in self.dict:
+                    fitness += np.power(len(word), 3)
+
+            # fitness += GeneticAlgorithm.fitness(self, permutation, words=words)
 
         return fitness
 
@@ -260,11 +270,15 @@ class GeneticAlgorithm2(GeneticAlgorithm):
         words = []
         for sentence in self.enc:
             permutated_sentence = self.permutated_word(best_permutation, sentence)
+            # specials = '.,;' #etc
+            # trans = string.maketrans(specials, ' '*len(specials))
+            # permutated_sentence = permutated_sentence.translate(trans)
             permutated_sentence = permutated_sentence.translate(None, ".,;")
             words = permutated_sentence.split(' ')
 
             for word in words:
-                if word not in dict:
+                if len(word) > 0 and word not in dict:
+                    print word
                     return False
 
         return True
@@ -272,6 +286,19 @@ class GeneticAlgorithm2(GeneticAlgorithm):
     def print_text(self, permutation):
         for sentence in self.enc:
             print self.permutated_word(permutation, sentence)
+
+    # def mutate(self, population):
+    #     for permutation in population:
+    #         for letter in self.possible_chars:
+    #             if calculate_probability(self.mutation_rate):
+    #                 random_letter = random.choice(self.possible_chars)
+    #
+    #                 key_of_random_letter = self.find_key_by_letter_in_dict(permutation, random_letter)
+    #                 permutation[key_of_random_letter] = permutation[letter]
+    #
+    #                 permutation[letter] = random_letter
+    #
+    #     return population
 
 
 if __name__ == "__main__":
@@ -294,14 +321,14 @@ if __name__ == "__main__":
     # with open("enc1.txt", 'r') as file:
     #     enc1_text = file.read()
     #
-    # write_result_to_files(enc1_text, chosen_premutation, "perm1.txt", "plain1.txt")
+    # write_result_to_files(GA1, enc1_text, chosen_premutation, "perm1.txt", "plain1.txt")
 
-
-    population_size_2 = 250
+    population_size_2 = 1000
     replication_rate_2 = 0.2
-    mutation_rate_2 = 0.02
+    mutation_rate_2 = 0.2
     enc2_chars = string.ascii_lowercase + " .,;"
 
+    print population_size_2, replication_rate_2, mutation_rate_2
     GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict)
     chosen_premutation = GA2.train()
     # GA2.train()
@@ -309,5 +336,7 @@ if __name__ == "__main__":
     with open("enc2.txt", 'r') as file:
         enc2_text = file.read()
 
-    permutated_text = GA2.permutated_word(chosen_premutation, enc2_text)
-    print permutated_text
+    write_result_to_files(GA2, enc2_text, chosen_premutation, "perm2.txt", "plain2.txt")
+
+    # permutated_text = GA2.permutated_word(chosen_premutation, enc2_text)
+    # print permutated_text
