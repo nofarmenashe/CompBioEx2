@@ -142,6 +142,7 @@ class GeneticAlgorithm:
         new_permutation = {}
         chars_without_permutation = pf1["permutation"].keys()
         chars_left = pf1["permutation"].keys()
+
         for c, per1, per2 in zip(pf1["permutation"].keys(), pf1["permutation"].values(), pf2["permutation"].values()):
             if np.random.random() < probability_of_p1:  # choose from first parent
                 if per1 in chars_left:
@@ -192,6 +193,8 @@ class GeneticAlgorithm:
         print "Starting training"
 
         expected_result = self.get_max_fitness()
+        bests = []
+        avgs = []
         best_fitness = 0
         iteration_number = 1
         best_permutation = self.population[0]
@@ -219,6 +222,9 @@ class GeneticAlgorithm:
             print "*** Iteration Number: ", iteration_number
             print "best", np.max(new_fitness)
             print "avg", np.average(new_fitness)
+
+            bests.append(np.max(new_fitness))
+            avgs.append(np.average(new_fitness))
 
             self.population = new_population
             iteration_number += 1
@@ -256,6 +262,7 @@ class GeneticAlgorithm2(GeneticAlgorithm):
             # trans = string.maketrans(specials, ' '*len(specials))
             # permutated_sentence = permutated_sentence.translate(trans)
             permutated_sentence = permutated_sentence.translate(None, ".,;")
+            # print permutated_sentence
             words = permutated_sentence.split(' ')
 
             for word in words:
@@ -324,8 +331,10 @@ if __name__ == "__main__":
     # write_result_to_files(GA1, enc1_text, chosen_premutation, "perm1.txt", "plain1.txt")
 
     population_size_2 = 1000
+    replication_rate_2 = 0.6
     replication_rate_2 = 0.2
     mutation_rate_2 = 0.2
+
     enc2_chars = string.ascii_lowercase + " .,;"
 
     print population_size_2, replication_rate_2, mutation_rate_2
