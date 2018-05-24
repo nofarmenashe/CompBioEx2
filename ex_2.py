@@ -260,7 +260,7 @@ class GeneticAlgorithm2(GeneticAlgorithm):
 
             for word in words:
                 if word in self.dict:
-                    fitness += np.power(len(word), 3)
+                    fitness += np.power(len(word), 2)
 
             # fitness += GeneticAlgorithm.fitness(self, permutation, words=words)
 
