@@ -278,7 +278,11 @@ class GeneticAlgorithm:
             # if iteration_number % 20 == 0:
             #     self.print_text(best_permutation)
 
+        best_permutation = self.fix_special_chars(best_permutation)
         return best_permutation, bests, avgs, iteration_number
+
+    def fix_special_chars(self, best_permutation):
+        return best_permutation
 
 
 def write_result_to_files(GA, enc_text, permutation, perm_filename, plain_filename):
@@ -301,8 +305,6 @@ class GeneticAlgorithm2(GeneticAlgorithm):
     def fitness(self, permutation):
         fitness = 0
         for sentence in self.enc:
-            # we do permutated_word TWICE !!!
-
             permutated_sentence = self.permutated_word(permutation, sentence)
             # specials = '.,;' #etc
             # trans = string.maketrans(specials, ' '*len(specials))
@@ -343,6 +345,44 @@ class GeneticAlgorithm2(GeneticAlgorithm):
         for sentence in self.enc:
             print self.permutated_word(permutation, sentence)
 
+    # def fix_special_chars(self, best_permutation):
+    #     # sentence = self.enc[0]
+    #     # permutated_sentence = self.permutated_word(best_permutation, sentence)
+    #
+    #     countPsik = 0
+    #     countNekudaPsik = 0
+    #
+    #     for sentence in self.enc:
+    #         permutated_sentence = self.permutated_word(best_permutation, sentence)
+    #
+    #         print sentence[-1]
+    #         if sentence[-1] != '.':
+    #             print "FIXING"
+    #             letter_to_fix = permutated_sentence[-1]
+    #
+    #             key_of_letter_to_fix = self.find_key_by_letter_in_dict(best_permutation, letter_to_fix)
+    #             best_permutation[key_of_letter_to_fix] = '.'
+    #
+    #             best_permutation['.'] = letter_to_fix
+    #
+    #         for word in permutated_sentence:
+    #             for letter in word:
+    #                 if letter == ',':
+    #                     countPsik += 1
+    #                 if letter == ';':
+    #                     countNekudaPsik += 1
+    #
+    #     if countPsik < countNekudaPsik:
+    #         letter_to_fix = ','
+    #
+    #         key_of_letter_to_fix = self.find_key_by_letter_in_dict(best_permutation, letter_to_fix)
+    #         best_permutation[key_of_letter_to_fix] = ';'
+    #
+    #         best_permutation[';'] = letter_to_fix
+    #
+    #     return best_permutation
+
+
     # def mutate(self, population):
     #     for permutation in population:
     #         for letter in self.possible_chars:
@@ -378,8 +418,10 @@ if __name__ == "__main__":
     if question == "a":
         print "Running Question ", question
 
-        GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
-        chosen_premutation, bests, avgs, number_of_iterations = GA1.train()
+        chosen_premutation = []
+        while not chosen_premutation:
+            GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
+            chosen_premutation, bests, avgs, number_of_iterations = GA1.train()
 
         with open("enc1.txt", 'r') as file:
             enc1_text = file.read()
@@ -402,7 +444,6 @@ if __name__ == "__main__":
         while not chosen_premutation:
             GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict)
             chosen_premutation, bests, avgs, number_of_iterations = GA2.train()
-        # GA2.train()
 
         with open("enc2.txt", 'r') as file:
             enc2_text = file.read()
