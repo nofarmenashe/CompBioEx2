@@ -1,7 +1,9 @@
+import sys
 import string
 import random
 import numpy as np
 from random import shuffle, sample
+import matplotlib.pyplot as plt
 import operator
 
 def read_text_file(text_file_name, remove_chars):
@@ -232,6 +234,10 @@ class GeneticAlgorithm:
             new_population.remove(best_permutation)
             new_population = self.mutate(new_population)
 
+            if len(bests) >= 50 and all(v == bests[-1] for v in bests[-50:]):
+                print "*** RESTART TRAINING ***"
+                return [], [], [], 0
+
             # if all(len(bests) >= 11 and v == bests[-1] for v in bests[-11:]):
             #     for i in range(10):
             #         self.mutation_rate = 1
@@ -266,14 +272,13 @@ class GeneticAlgorithm:
             bests.append(np.max(new_fitness))
             avgs.append(np.average(new_fitness))
 
-
             self.population = new_population
             iteration_number += 1
 
-            if iteration_number % 20 == 0:
-                self.print_text(best_permutation)
+            # if iteration_number % 20 == 0:
+            #     self.print_text(best_permutation)
 
-        return best_permutation
+        return best_permutation, bests, avgs, iteration_number
 
 
 def write_result_to_files(GA, enc_text, permutation, perm_filename, plain_filename):
@@ -359,38 +364,55 @@ if __name__ == "__main__":
 
     dict = set(np.loadtxt("dict.txt", dtype=np.str, encoding='iso 8859-1'))
 
+    bests = []
+    avgs = []
+    number_of_iterations = 0
+
+    question = sys.argv[1]
+
     population_size = 500
     replication_rate = 0.1
     enc1_chars = string.ascii_lowercase
     mutation_rate = 0.25
 
-    # GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
-    # chosen_premutation = GA1.train()
-    # # GA1.train()
-    #
-    #
-    # with open("enc1.txt", 'r') as file:
-    #     enc1_text = file.read()
-    #
-    # write_result_to_files(GA1, enc1_text, chosen_premutation, "perm1.txt", "plain1.txt")
+    if question == "a":
+        print "Running Question ", question
+
+        GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
+        chosen_premutation, bests, avgs, number_of_iterations = GA1.train()
+
+        with open("enc1.txt", 'r') as file:
+            enc1_text = file.read()
+
+        write_result_to_files(GA1, enc1_text, chosen_premutation, "perm1.txt", "plain1.txt")
 
     population_size_2 = 4000
     replication_rate_2 = 0.01
     mutation_rate_2 = 0.4
-
-    # elitism = 5
-
     enc2_chars = string.ascii_lowercase + " .,;"
-
     print population_size_2, replication_rate_2, mutation_rate_2
-    GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict)
-    chosen_premutation = GA2.train()
-    # GA2.train()
 
-    with open("enc2.txt", 'r') as file:
-        enc2_text = file.read()
+    if question == "b":
+        print "Running Question ", question
 
-    write_result_to_files(GA2, enc2_text, chosen_premutation, "perm2.txt", "plain2.txt")
+        # GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict)
+        # chosen_premutation = GA2.train()
 
-    # permutated_text = GA2.permutated_word(chosen_premutation, enc2_text)
-    # print permutated_text
+        chosen_premutation = []
+        while not chosen_premutation:
+            GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict)
+            chosen_premutation, bests, avgs, number_of_iterations = GA2.train()
+        # GA2.train()
+
+        with open("enc2.txt", 'r') as file:
+            enc2_text = file.read()
+
+        write_result_to_files(GA2, enc2_text, chosen_premutation, "perm2.txt", "plain2.txt")
+
+        # permutated_text = GA2.permutated_word(chosen_premutation, enc2_text)
+        # print permutated_text
+
+    number_of_iterations = [i for i in range(number_of_iterations - 1)]
+    plt.plot(number_of_iterations, bests, 'b-', label="Best fitness")
+    plt.plot(number_of_iterations, avgs, 'r-', label="Average fitness")
+    plt.show()
