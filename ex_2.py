@@ -4,7 +4,7 @@ import random
 import numpy as np
 from random import shuffle, sample
 import matplotlib.pyplot as plt
-import operator
+
 
 def read_text_file(text_file_name, remove_chars):
     with open(text_file_name, 'r') as file:
@@ -58,17 +58,12 @@ class GeneticAlgorithm:
 
     def initialize_population(self):
         population = []
-        # common_letter = self.most_common_letter()
         for x in range(self.population_size):
             permutation = {}
             values = ''.join(sample(self.possible_chars, len(self.possible_chars)))
             for i, char in enumerate(self.possible_chars):
                 permutation[char] = values[i]
 
-            # common_letter_key = self.find_key_by_letter_in_dict(permutation, common_letter)
-            # permutation['e'] = permutation[common_letter_key]
-            #
-            # permutation[common_letter] = 'e'
             population.append(permutation)
 
         return population
@@ -118,7 +113,7 @@ class GeneticAlgorithm:
     def mutate(self, population, p=None):
         if not p:
             p = self.mutation_rate
-        # print permutation
+
         for permutation in population:
             if calculate_probability(p):
                 random_letter1, random_letter2 = np.random.choice(permutation.keys(), size=2)
@@ -127,22 +122,11 @@ class GeneticAlgorithm:
                 permutation[random_letter1] = permutation[random_letter2]
                 permutation[random_letter2] = permutation_letter1
 
-        # print permutation
         return population
 
     def replication(self, sorted_permutations):
-        # print sorted_permutations
         top_permutaions = sorted_permutations[:int(self.replication_rate * population_size)]
         return [self.population[index] for index in top_permutaions]
-
-    # def create_permutation_array_by_fitness(self, fitness_dictionary):
-    #     permutations_array = []
-    #     sum_fitnesses = np.sum(fitness_dictionary.values())
-    #     for per, fitness in fitness_dictionary.items():
-    #         print fitness, sum_fitnesses
-    #         permutations_array.extend(np.full(int(float(fitness) / sum_fitnesses), per))
-    #     print permutations_array
-    #     return permutations_array
 
     def chooseParents(self, fitness_dict):
         sum_of_fitnesses = np.sum(fitness_dict.values())
@@ -205,17 +189,13 @@ class GeneticAlgorithm:
     def train(self):
         print "Starting training"
 
-        expected_result = self.get_max_fitness()
         bests = []
         avgs = []
-        iterations_without_improvement = 0
-        best_fitness = 0
         iteration_number = 1
         best_permutation = self.population[0]
         original_mutation_rate = self.mutation_rate
         return_to_original_mutation_rate_at_iteration = -1
 
-        # while best_fitness < expected_result:
         while not self.is_best(best_permutation):
             if return_to_original_mutation_rate_at_iteration == iteration_number:
                 self.mutation_rate = original_mutation_rate
@@ -234,35 +214,13 @@ class GeneticAlgorithm:
             new_population.remove(best_permutation)
             new_population = self.mutate(new_population)
 
+            # Fitness didn't improve in 50 iterations, then restart
             if len(bests) >= 50 and all(v == bests[-1] for v in bests[-50:]):
                 print "*** RESTART TRAINING ***"
                 return [], [], [], 0
 
-            # if all(len(bests) >= 11 and v == bests[-1] for v in bests[-11:]):
-            #     for i in range(10):
-            #         self.mutation_rate = 1
-            #         best_permutation = self.mutate_permutation(best_permutation)
-            #         self.mutation_rate = original_mutation_rate
-
-            # bests.append(best_permutation)
-
-            # in case populaation doesnt improve
-            if fitness_dict[sorted_permutations[0]] - best_fitness < 10:
-                iterations_without_improvement += 1
-            else:
-                iterations_without_improvement = 0
-
-            # if iterations_without_improvement > 5:
-            #     print "Crossover best"
-            #     print "before: ", best_permutation
-            #     iterations_without_improvement = 0
-            #     best_permutation = self.crossover([best_permutation, self.population[sorted_permutations[1]]])
-            #     print "after: ", best_permutation
-
             new_population.append(best_permutation)
-            best_fitness = fitness_dict[sorted_permutations[0]]
 
-            # new_fitness = [self.fitness(per) for per in new_population]
             new_fitness = fitness_dict.values()
 
             print "*** Iteration Number: ", iteration_number
@@ -275,14 +233,7 @@ class GeneticAlgorithm:
             self.population = new_population
             iteration_number += 1
 
-            # if iteration_number % 20 == 0:
-            #     self.print_text(best_permutation)
-
-        best_permutation = self.fix_special_chars(best_permutation)
         return best_permutation, bests, avgs, iteration_number
-
-    def fix_special_chars(self, best_permutation):
-        return best_permutation
 
 
 def write_result_to_files(GA, enc_text, permutation, perm_filename, plain_filename):
@@ -306,21 +257,13 @@ class GeneticAlgorithm2(GeneticAlgorithm):
         fitness = 0
         for sentence in self.enc:
             permutated_sentence = self.permutated_word(permutation, sentence)
-            # specials = '.,;' #etc
-            # trans = string.maketrans(specials, ' '*len(specials))
-            # permutated_sentence = permutated_sentence.translate(trans)
             permutated_sentence = permutated_sentence.translate(None, ".,;")
-            # print permutated_sentence
             words = permutated_sentence.split(' ')
             words = np.unique(words)
 
             for word in words:
                 if word in self.dict and len(word) > 1:
                     fitness += 1
-                    # fitness += len(word)
-                    # fitness += np.power(len(word), 2)
-
-            # fitness += GeneticAlgorithm.fitness(self, permutation, words=words)
 
         return fitness
 
@@ -328,9 +271,6 @@ class GeneticAlgorithm2(GeneticAlgorithm):
         words = []
         for sentence in self.enc:
             permutated_sentence = self.permutated_word(best_permutation, sentence)
-            # specials = '.,;' #etc
-            # trans = string.maketrans(specials, ' '*len(specials))
-            # permutated_sentence = permutated_sentence.translate(trans)
             permutated_sentence = permutated_sentence.translate(None, ".,;")
             words = permutated_sentence.split(' ')
 
@@ -344,57 +284,6 @@ class GeneticAlgorithm2(GeneticAlgorithm):
     def print_text(self, permutation):
         for sentence in self.enc:
             print self.permutated_word(permutation, sentence)
-
-    # def fix_special_chars(self, best_permutation):
-    #     # sentence = self.enc[0]
-    #     # permutated_sentence = self.permutated_word(best_permutation, sentence)
-    #
-    #     countPsik = 0
-    #     countNekudaPsik = 0
-    #
-    #     for sentence in self.enc:
-    #         permutated_sentence = self.permutated_word(best_permutation, sentence)
-    #
-    #         print sentence[-1]
-    #         if sentence[-1] != '.':
-    #             print "FIXING"
-    #             letter_to_fix = permutated_sentence[-1]
-    #
-    #             key_of_letter_to_fix = self.find_key_by_letter_in_dict(best_permutation, letter_to_fix)
-    #             best_permutation[key_of_letter_to_fix] = '.'
-    #
-    #             best_permutation['.'] = letter_to_fix
-    #
-    #         for word in permutated_sentence:
-    #             for letter in word:
-    #                 if letter == ',':
-    #                     countPsik += 1
-    #                 if letter == ';':
-    #                     countNekudaPsik += 1
-    #
-    #     if countPsik < countNekudaPsik:
-    #         letter_to_fix = ','
-    #
-    #         key_of_letter_to_fix = self.find_key_by_letter_in_dict(best_permutation, letter_to_fix)
-    #         best_permutation[key_of_letter_to_fix] = ';'
-    #
-    #         best_permutation[';'] = letter_to_fix
-    #
-    #     return best_permutation
-
-
-    # def mutate(self, population):
-    #     for permutation in population:
-    #         for letter in self.possible_chars:
-    #             if calculate_probability(self.mutation_rate):
-    #                 random_letter = random.choice(self.possible_chars)
-    #
-    #                 key_of_random_letter = self.find_key_by_letter_in_dict(permutation, random_letter)
-    #                 permutation[key_of_random_letter] = permutation[letter]
-    #
-    #                 permutation[letter] = random_letter
-    #
-    #     return population
 
 
 if __name__ == "__main__":
@@ -437,9 +326,6 @@ if __name__ == "__main__":
     if question == "b":
         print "Running Question ", question
 
-        # GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict)
-        # chosen_premutation = GA2.train()
-
         chosen_premutation = []
         while not chosen_premutation:
             GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict)
@@ -449,9 +335,6 @@ if __name__ == "__main__":
             enc2_text = file.read()
 
         write_result_to_files(GA2, enc2_text, chosen_premutation, "perm2.txt", "plain2.txt")
-
-        # permutated_text = GA2.permutated_word(chosen_premutation, enc2_text)
-        # print permutated_text
 
     number_of_iterations = [i for i in range(number_of_iterations - 1)]
     plt.plot(number_of_iterations, bests, 'b-', label="Best fitness")
