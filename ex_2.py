@@ -29,7 +29,7 @@ def calculate_probability(p):
 
 class GeneticAlgorithm:
 
-    def __init__(self, population_size, replication_rate, mutation_rate, possible_chars, enc, dict):
+    def __init__(self, population_size, replication_rate, mutation_rate, possible_chars, enc, dict, elitism):
         self.population_size = population_size
         self.replication_rate = replication_rate
         self.mutation_rate = mutation_rate
@@ -37,6 +37,8 @@ class GeneticAlgorithm:
         self.possible_chars = possible_chars
         self.enc = enc
         self.dict = dict
+
+        self.elitism = elitism
 
         self.population = self.initialize_population()
 
@@ -113,20 +115,20 @@ class GeneticAlgorithm:
             permutation[random_letter2] = permutation_letter1
         return permutation
 
-    def mutate(self, population, p=None):
-        if not p:
-            p = self.mutation_rate
-        # print permutation
-        for permutation in population:
-            if calculate_probability(p):
-                random_letter1, random_letter2 = np.random.choice(permutation.keys(), size=2)
-
-                permutation_letter1 = permutation[random_letter1]
-                permutation[random_letter1] = permutation[random_letter2]
-                permutation[random_letter2] = permutation_letter1
-
-        # print permutation
-        return population
+    # def mutate(self, population, p=None):
+    #     if not p:
+    #         p = self.mutation_rate
+    #     # print permutation
+    #     for permutation in population:
+    #         if calculate_probability(p):
+    #             random_letter1, random_letter2 = np.random.choice(permutation.keys(), size=2)
+    #
+    #             permutation_letter1 = permutation[random_letter1]
+    #             permutation[random_letter1] = permutation[random_letter2]
+    #             permutation[random_letter2] = permutation_letter1
+    #
+    #     # print permutation
+    #     return population
 
     def replication(self, sorted_permutations):
         # print sorted_permutations
@@ -224,13 +226,24 @@ class GeneticAlgorithm:
             sorted_permutations = self.calculate_population_fitness(fitness_dict)
 
             best_permutation = self.population[sorted_permutations[0]]
+            best_permutations = []
+            for permutation_index in sorted_permutations[:self.elitism]:
+                best_permutations.append(self.population[permutation_index])
 
             new_population.extend(self.replication(sorted_permutations))
 
             new_population.extend(self.crossover(fitness_dict))
 
-            new_population.remove(best_permutation)
+            # new_population.remove(best_permutation)
+            # new_population = [permutation for permutation in new_population if permutation not in best_permutations]
+            for permutation in best_permutations:
+                new_population.remove(permutation)
             new_population = self.mutate(new_population)
+
+            # If we stuck, return null and restart training
+            if len(bests) >= 50 and all(v == bests[-1] for v in bests[-50:]):
+                print "*** RESTART TRAINING ***"
+                return []
 
             # if all(len(bests) >= 11 and v == bests[-1] for v in bests[-11:]):
             #     for i in range(10):
@@ -253,7 +266,8 @@ class GeneticAlgorithm:
             #     best_permutation = self.crossover([best_permutation, self.population[sorted_permutations[1]]])
             #     print "after: ", best_permutation
 
-            new_population.append(best_permutation)
+            # new_population.append(best_permutation)
+            new_population.extend(best_permutations)
             best_fitness = fitness_dict[sorted_permutations[0]]
 
             # new_fitness = [self.fitness(per) for per in new_population]
@@ -290,8 +304,8 @@ def write_result_to_files(GA, enc_text, permutation, perm_filename, plain_filena
 
 class GeneticAlgorithm2(GeneticAlgorithm):
 
-    def __init__(self, population_size, replication_rate, mutation_rate, possible_chars, enc, dict):
-        GeneticAlgorithm.__init__(self, population_size, replication_rate, mutation_rate, possible_chars, enc, dict)
+    def __init__(self, population_size, replication_rate, mutation_rate, possible_chars, enc, dict, elitism):
+        GeneticAlgorithm.__init__(self, population_size, replication_rate, mutation_rate, possible_chars, enc, dict, elitism)
 
     def fitness(self, permutation):
         fitness = 0
@@ -338,18 +352,18 @@ class GeneticAlgorithm2(GeneticAlgorithm):
         for sentence in self.enc:
             print self.permutated_word(permutation, sentence)
 
-    # def mutate(self, population):
-    #     for permutation in population:
-    #         for letter in self.possible_chars:
-    #             if calculate_probability(self.mutation_rate):
-    #                 random_letter = random.choice(self.possible_chars)
-    #
-    #                 key_of_random_letter = self.find_key_by_letter_in_dict(permutation, random_letter)
-    #                 permutation[key_of_random_letter] = permutation[letter]
-    #
-    #                 permutation[letter] = random_letter
-    #
-    #     return population
+    def mutate(self, population):
+        for permutation in population:
+            for letter in self.possible_chars:
+                if calculate_probability(self.mutation_rate):
+                    random_letter = random.choice(self.possible_chars)
+
+                    key_of_random_letter = self.find_key_by_letter_in_dict(permutation, random_letter)
+                    permutation[key_of_random_letter] = permutation[letter]
+
+                    permutation[letter] = random_letter
+
+        return population
 
 
 if __name__ == "__main__":
@@ -364,7 +378,9 @@ if __name__ == "__main__":
     enc1_chars = string.ascii_lowercase
     mutation_rate = 0.25
 
-    # GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict)
+    elitism1 = 1
+
+    # GA1 = GeneticAlgorithm(population_size, replication_rate, mutation_rate, enc1_chars, enc1, dict, elitism1)
     # chosen_premutation = GA1.train()
     # # GA1.train()
     #
@@ -375,16 +391,18 @@ if __name__ == "__main__":
     # write_result_to_files(GA1, enc1_text, chosen_premutation, "perm1.txt", "plain1.txt")
 
     population_size_2 = 4000
-    replication_rate_2 = 0.01
+    replication_rate_2 = 0.2
     mutation_rate_2 = 0.4
-
-    # elitism = 5
+    elitism2 = 1
+    print population_size_2, replication_rate_2, mutation_rate_2
 
     enc2_chars = string.ascii_lowercase + " .,;"
 
-    print population_size_2, replication_rate_2, mutation_rate_2
-    GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict)
-    chosen_premutation = GA2.train()
+    chosen_premutation = []
+    while not chosen_premutation:
+        GA2 = GeneticAlgorithm2(population_size_2, replication_rate_2, mutation_rate_2, enc2_chars, enc2, dict, elitism2)
+        chosen_premutation = GA2.train()
+
     # GA2.train()
 
     with open("enc2.txt", 'r') as file:
